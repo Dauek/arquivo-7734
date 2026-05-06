@@ -3,568 +3,100 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OP-7734 · MISSÃO DESBLOQUEADA</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #020b04;
-      --green: #00ff41;
-      --green-dim: #00a82b;
-      --green-faint: rgba(0,255,65,0.06);
-      --green-glow: rgba(0,255,65,0.3);
-      --amber: #ffb700;
-      --red: #ff2c2c;
-      --card: rgba(0,255,65,0.04);
-      --card-border: rgba(0,255,65,0.14);
-    }
-
-    body {
-      font-family: 'Share Tech Mono', monospace;
-      background: var(--bg);
-      color: var(--green);
-      min-height: 100vh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      overflow-x: hidden;
-      cursor: crosshair;
-    }
-
-    /* Scanlines */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,0,0,0.15) 2px,
-        rgba(0,0,0,0.15) 4px
-      );
-      z-index: 999;
-    }
-
-    /* Vignette */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%);
-      z-index: 998;
-    }
-
-    /* Grid de fundo */
-    .grid-bg {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      background-image:
-        linear-gradient(rgba(0,255,65,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,255,65,0.035) 1px, transparent 1px);
-      background-size: 40px 40px;
-      animation: gridScroll 30s linear infinite;
-    }
-
-    @keyframes gridScroll {
-      to { background-position: 0 40px; }
-    }
-
-    /* Matrix rain */
-    .matrix-rain {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      overflow: hidden;
-      opacity: 0.06;
-      pointer-events: none;
-      font-size: 11px;
-      color: var(--green);
-    }
-
-    /* Conteúdo */
-    .main {
-      position: relative;
-      z-index: 10;
-      width: 100%;
-      max-width: 620px;
-      padding: 40px 20px 80px;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    /* Barra de status */
-    .status-bar {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.6rem;
-      color: var(--green-dim);
-      letter-spacing: 0.08em;
-      margin-bottom: 6px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(0,255,65,0.1);
-      animation: fadeIn 0.4s ease both;
-    }
-
-    .status-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--green);
-      display: inline-block;
-      margin-right: 6px;
-      animation: blink 1.2s step-end infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    /* Header do terminal */
-    .term-header {
-      background: rgba(0,255,65,0.04);
-      border: 1px solid rgba(0,255,65,0.14);
-      border-bottom: none;
-      padding: 9px 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      animation: fadeIn 0.4s 0.05s ease both;
-    }
-
-    .term-dots { display: flex; gap: 5px; }
-    .term-dots span {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: rgba(0,255,65,0.2);
-      border: 1px solid rgba(0,255,65,0.3);
-    }
-
-    .term-title-bar {
-      font-size: 0.62rem;
-      color: var(--green-dim);
-      letter-spacing: 0.1em;
-      flex: 1;
-      text-align: center;
-    }
-
-    /* Corpo principal */
-    .term-body {
-      background: rgba(0,8,2,0.96);
-      border: 1px solid rgba(0,255,65,0.14);
-      border-top: none;
-      padding: 32px 32px 36px;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 0 80px rgba(0,255,65,0.05), inset 0 0 50px rgba(0,0,0,0.5);
-    }
-
-    .term-body::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--green), transparent);
-      opacity: 0.4;
-    }
-
-    /* Prompt lines de boot */
-    .boot-line {
-      font-size: 0.68rem;
-      color: var(--green-dim);
-      letter-spacing: 0.05em;
-      margin-bottom: 3px;
-      animation: fadeIn 0.3s ease both;
-    }
-
-    .boot-line .sym { color: var(--green); }
-    .boot-line .ok  { color: var(--amber); }
-
-    /* ─── TÍTULO PRINCIPAL ─── */
-    .mission-badge {
-      display: inline-block;
-      font-size: 0.6rem;
-      letter-spacing: 0.2em;
-      color: var(--amber);
-      border: 1px solid rgba(255,183,0,0.35);
-      background: rgba(255,183,0,0.07);
-      padding: 4px 12px;
-      margin: 22px 0 14px;
-      animation: fadeIn 0.5s 0.3s ease both;
-    }
-
-    .main-title {
-      font-family: 'VT323', monospace;
-      font-size: clamp(2.4rem, 10vw, 4.2rem);
-      color: var(--green);
-      text-shadow:
-        0 0 14px var(--green-glow),
-        0 0 40px rgba(0,255,65,0.12);
-      letter-spacing: 0.06em;
-      line-height: 1.0;
-      animation: fadeIn 0.5s 0.35s ease both, flicker 10s 3s ease-in-out infinite;
-      margin-bottom: 6px;
-    }
-
-    @keyframes flicker {
-      0%, 94%, 100% { opacity: 1; }
-      95% { opacity: 0.6; }
-      96% { opacity: 1; }
-      97.5% { opacity: 0.3; }
-      98% { opacity: 1; }
-    }
-
-    .main-title .accent { color: var(--amber); }
-
-    .op-tag {
-      font-size: 0.62rem;
-      color: rgba(0,255,65,0.35);
-      letter-spacing: 0.18em;
-      margin-bottom: 24px;
-      animation: fadeIn 0.5s 0.45s ease both;
-    }
-
-    .divider {
-      border: none;
-      border-top: 1px dashed rgba(0,255,65,0.18);
-      margin: 20px 0;
-    }
-
-    /* ─── CARD DE BRIEFING (mensagem do Thiago) ─── */
-    .briefing-card {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      padding: 22px 24px;
-      position: relative;
-      margin-bottom: 24px;
-      animation: fadeIn 0.6s 0.55s ease both;
-    }
-
-    /* Canto cortado estilo arquivo classificado */
-    .briefing-card::before {
-      content: '';
-      position: absolute;
-      top: 0; right: 0;
-      width: 20px; height: 20px;
-      background: var(--bg);
-      clip-path: polygon(100% 0, 0 0, 100% 100%);
-      border-left: 1px solid var(--card-border);
-      border-bottom: 1px solid var(--card-border);
-    }
-
-    .briefing-card::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, var(--green), transparent);
-      opacity: 0.5;
-    }
-
-    .briefing-label {
-      font-size: 0.6rem;
-      color: var(--green-dim);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .briefing-label::before {
-      content: '';
-      display: inline-block;
-      width: 20px; height: 1px;
-      background: var(--green-dim);
-    }
-
-    .briefing-text {
-      font-size: 0.82rem;
-      color: rgba(0,255,65,0.75);
-      line-height: 1.9;
-      letter-spacing: 0.04em;
-    }
-
-    .briefing-text .hl {
-      color: var(--green);
-      font-size: 0.9rem;
-    }
-
-    .signature {
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px dashed rgba(0,255,65,0.15);
-      font-size: 0.75rem;
-      color: var(--amber);
-      letter-spacing: 0.08em;
-    }
-
-    /* ─── CARD DO VÍDEO ─── */
-    .video-card {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      overflow: hidden;
-      position: relative;
-      animation: fadeIn 0.6s 0.7s ease both;
-    }
-
-    .video-card::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--green), transparent);
-      opacity: 0.5;
-      z-index: 2;
-    }
-
-    .video-label-bar {
-      padding: 8px 16px;
-      border-bottom: 1px solid rgba(0,255,65,0.1);
-      font-size: 0.6rem;
-      color: var(--green-dim);
-      letter-spacing: 0.14em;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .video-placeholder {
-      width: 100%;
-      aspect-ratio: 16/9;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      background:
-        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,255,65,0.05) 0%, transparent 70%),
-        linear-gradient(160deg, #040f06 0%, #020b04 100%);
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: background 0.3s;
-    }
-
-    /* Grid interno do player */
-    .video-placeholder::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(0,255,65,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,255,65,0.025) 1px, transparent 1px);
-      background-size: 30px 30px;
-    }
-
-    .video-placeholder:hover {
-      background:
-        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,255,65,0.09) 0%, transparent 70%),
-        linear-gradient(160deg, #071208 0%, #040b05 100%);
-    }
-
-    .play-ring {
-      position: relative;
-      width: 72px; height: 72px;
-      z-index: 1;
-    }
-
-    .play-ring::before {
-      content: '';
-      position: absolute;
-      inset: -8px;
-      border-radius: 50%;
-      border: 1px solid rgba(0,255,65,0.25);
-      animation: pulsering 2s ease-in-out infinite;
-    }
-
-    .play-ring::after {
-      content: '';
-      position: absolute;
-      inset: -18px;
-      border-radius: 50%;
-      border: 1px solid rgba(0,255,65,0.1);
-      animation: pulsering 2s 0.5s ease-in-out infinite;
-    }
-
-    @keyframes pulsering {
-      0%, 100% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.15); opacity: 0.3; }
-    }
-
-    .play-btn-inner {
-      width: 72px; height: 72px;
-      border-radius: 50%;
-      border: 2px solid var(--green);
-      background: rgba(0,255,65,0.08);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.6rem;
-      box-shadow: 0 0 30px rgba(0,255,65,0.3), inset 0 0 20px rgba(0,255,65,0.05);
-      transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
-    }
-
-    .video-placeholder:hover .play-btn-inner {
-      transform: scale(1.08);
-      box-shadow: 0 0 50px rgba(0,255,65,0.5), inset 0 0 20px rgba(0,255,65,0.1);
-      background: rgba(0,255,65,0.12);
-    }
-
-    .play-label {
-      font-size: 0.65rem;
-      color: rgba(0,255,65,0.4);
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      z-index: 1;
-    }
-
-    #real-video {
-      width: 100%;
-      aspect-ratio: 16/9;
-      display: none;
-      background: #000;
-    }
-
-    /* Rodapé do terminal */
-    .term-footer {
-      margin-top: 28px;
-      font-size: 0.58rem;
-      color: rgba(0,255,65,0.18);
-      letter-spacing: 0.08em;
-      line-height: 1.7;
-      animation: fadeIn 0.5s 0.85s ease both;
-    }
-
-    /* Animações */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (max-width: 480px) {
-      .term-body { padding: 24px 18px 28px; }
-    }
-  </style>
+  <title>🎂 Feliz Aniversário, Pedro!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <div class="grid-bg"></div>
-  <div class="matrix-rain" id="matrix-rain"></div>
 
-  <div class="main">
+  <div class="stars"></div>
 
-    <div class="status-bar">
-      <span><span class="status-dot"></span>SESSÃO AUTENTICADA — AGENTE VERIFICADO</span>
-      <span id="clock">00:00:00</span>
-      <span>NÓ: BR-DF-009</span>
-    </div>
+  <div id="birthday-screen">
 
-    <div class="term-header">
-      <div class="term-dots"><span></span><span></span><span></span></div>
-      <span class="term-title-bar">SISTEMA PARANORMAL — BRIEFING CLASSIFICADO · OP-7734</span>
-    </div>
+    <div class="bday-title">🎂 Feliz Aniversário,<br>Pedro! 🎉</div>
 
-    <div class="term-body">
+    <p class="bday-sub">
+      Você encontrou a surpresa secreta!<br>
+      Prepara o coração que vai ter mensagem especial 💛
+    </p>
 
-      <div class="boot-line"><span class="sym">></span> verificando clearance... <span class="ok">[ OK ]</span></div>
-      <div class="boot-line"><span class="sym">></span> desencriptando arquivo de missão... <span class="ok">[ OK ]</span></div>
-      <div class="boot-line"><span class="sym">></span> carregando briefing do comando... <span class="ok">[ CONCLUÍDO ]</span></div>
+    <!-- ═══════════ CARD DO VÍDEO ═══════════ -->
+    <div class="video-card">
 
-      <div class="mission-badge">// MISSÃO DESBLOQUEADA · CLEARANCE: ALFA //</div>
-
-      <div class="main-title">PARABÉNS,<br><span class="accent">AGENTE.</span></div>
-      <div class="op-tag">// OPERAÇÃO 7734-BRAVO · ARQUIVO DESCLASSIFICADO //</div>
-
-      <hr class="divider"/>
-
-      <!-- CARD DA MENSAGEM -->
-      <div class="briefing-card">
-        <div class="briefing-label">mensagem do comando</div>
-        <p class="briefing-text">
-          <span class="hl">Eai campeão,</span> você conseguiu encontrar o vídeo.<br><br>
-          Você é um agente de elite mesmo, hein? Poucos chegam até aqui.<br><br>
-          Esse vídeo é muito importante — dá uma conferida aí, por favor.
-        </p>
-        <div class="signature">— assinado: Thiago 🫵😂</div>
+      <!-- Capa clicável -->
+      <div class="video-placeholder" id="video-placeholder" onclick="playVideo()">
+        <div class="play-btn">▶️</div>
+        <span class="video-label">Clique para assistir a surpresa!</span>
       </div>
 
-      <!-- CARD DO VÍDEO -->
-      <div class="video-card">
-        <div class="video-label-bar">
-          <span>// ARQUIVO DE VÍDEO · CLASSIFICADO</span>
-          <span>OP-7734 · CRIPTOGRAFADO</span>
-        </div>
-
-        <div class="video-placeholder" id="video-placeholder" onclick="playVideo()">
-          <div class="play-ring">
-            <div class="play-btn-inner">▶</div>
-          </div>
-          <span class="play-label">[ reproduzir arquivo ]</span>
-        </div>
-
-        <!--
-          Coloque o caminho do seu vídeo aqui.
-          Exemplo: videos/mensagem.mp4
-        -->
-        <video id="real-video" controls>
-          <source src="videos/VID_20250507_142402_425.mp4" type="video/mp4">
-          Seu navegador não suporta o elemento de vídeo.
-        </video>
-      </div>
-
-      <div class="term-footer">
-        <div>// sessão encerrada automaticamente após 30min de inatividade</div>
-        <div>// todas as transmissões são criptografadas ponta-a-ponta · protocolo OP-7</div>
-        <div>// SERVIDOR: paranormal-auth-03 · UPTIME: 847d 14h 22m</div>
-      </div>
+      <iframe
+        id="real-video"
+        src="https://www.youtube.com/embed/_JMHdoohbY8?autoplay=1"
+        allow="autoplay; fullscreen"
+        allowfullscreen
+        style="display:none; width:100%; aspect-ratio:16/9; border:none;">
+      </iframe>
 
     </div>
+
+    <!-- ═══════════ MENSAGEM ═══════════ -->
+    <div class="msg-card">
+      <p>
+        Hoje é um dia muito especial porque é o dia em que o universo ganhou
+        <span>você</span>, Pedro! 🌟<br><br>
+        Que esse novo ano de vida seja repleto de conquistas, risadas, momentos
+        inesquecíveis e muita alegria. Você merece tudo de melhor que a vida
+        pode oferecer!<br><br>
+        Obrigado por fazer os nossos dias mais especiais só por existir. 🎈
+      </p>
+      <div class="signature">— Com muito carinho, seus amigos 🫶</div>
+    </div>
+
   </div>
 
   <script>
-    function updateClock() {
-      const now = new Date();
-      const h = String(now.getHours()).padStart(2,'0');
-      const m = String(now.getMinutes()).padStart(2,'0');
-      const s = String(now.getSeconds()).padStart(2,'0');
-      document.getElementById('clock').textContent = `${h}:${m}:${s}`;
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
-
-    const rain = document.getElementById('matrix-rain');
-    const chars = 'アイウエオカキクケコ01234567890ABCDEF∅∞§∆◊░▒▓ΩΨΦ';
-    for (let i = 0; i < 140; i++) {
-      const span = document.createElement('span');
-      span.style.cssText = `
-        position: absolute;
-        left: ${Math.random() * 100}vw;
-        top: ${Math.random() * 100}vh;
-        font-size: ${8 + Math.random() * 7}px;
-        animation: blink ${0.8 + Math.random() * 3}s ${Math.random() * 4}s step-end infinite;
+    /* ── CONFETE ── */
+    const colors = ['#f7c948','#ff6eb4','#a855f7','#38bdf8','#ff9f43','#1dd1a1'];
+    for (let i = 0; i < 22; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.cssText = `
+        left: ${Math.random()*100}vw;
+        width: ${4+Math.random()*6}px;
+        height: ${8+Math.random()*8}px;
+        background: ${colors[Math.floor(Math.random()*colors.length)]};
+        opacity: ${.4+Math.random()*.6};
+        animation-duration: ${4+Math.random()*6}s;
+        animation-delay: ${Math.random()*6}s;
       `;
-      span.textContent = chars[Math.floor(Math.random() * chars.length)];
-      rain.appendChild(span);
+      document.body.appendChild(p);
     }
 
-    setInterval(() => {
-      rain.querySelectorAll('span').forEach(s => {
-        if (Math.random() > 0.82) {
-          s.textContent = chars[Math.floor(Math.random() * chars.length)];
-        }
-      });
-    }, 250);
+    /* ── EMOJIS FLUTUANTES ── */
+    const em = ['🎂','🎉','🎈','✨','🥳','🎁','💛','🌟','🫶','🎊'];
 
+    function spawnEmoji() {
+      const el = document.createElement('div');
+      el.className = 'floaty';
+      el.textContent = em[Math.floor(Math.random() * em.length)];
+      el.style.left = (5 + Math.random() * 90) + 'vw';
+      el.style.bottom = '-40px';
+      el.style.animationDuration = (3 + Math.random() * 3) + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 6000);
+    }
+
+    // Burst inicial
+    for (let i = 0; i < 18; i++) {
+      setTimeout(spawnEmoji, i * 200);
+    }
+    // Loop contínuo
+    setInterval(spawnEmoji, 800);
+
+    /* ── PLAY VÍDEO ── */
     function playVideo() {
       document.getElementById('video-placeholder').style.display = 'none';
-      const v = document.getElementById('real-video');
-      v.style.display = 'block';
-      v.play().catch(() => {});
+      document.getElementById('real-video').style.display = 'block';
     }
   </script>
 </body>
