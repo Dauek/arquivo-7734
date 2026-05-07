@@ -511,10 +511,13 @@
           Coloque o caminho do seu vídeo aqui.
           Exemplo: videos/mensagem.mp4
         -->
-        <video id="real-video" controls>
-          <source src="videos/VID_20250507_142402_425.mp4" type="video/mp4">
-          Seu navegador não suporta o elemento de vídeo.
-        </video>
+        <iframe
+          id="real-video"
+          src="https://drive.google.com/file/d/1h5_IZFJF4mgYpNvhlmCk0LIu9Wirn6mH/preview"
+          allow="autoplay; fullscreen"
+          allowfullscreen
+          style="border:none;">
+        </iframe>
       </div>
 
       <div class="term-footer">
@@ -562,9 +565,7 @@
 
     function playVideo() {
       document.getElementById('video-placeholder').style.display = 'none';
-      const v = document.getElementById('real-video');
-      v.style.display = 'block';
-      v.play().catch(() => {});
+      document.getElementById('real-video').style.display = 'block';
     }
   </script>
 </body>
